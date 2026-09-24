@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Pelaporan Wali Kelas - Madrasatul Qur'an PP Sunan Drajat 2026-2027</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN for Analytics & Diagrams -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- jsPDF and html2pdf for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        emerald: {
+                            600: '#059669',
+                            700: '#047857',
+                            800: '#065f46',
+                            900: '#064e3b',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col justify-between">
+
+    <header class="bg-emerald-800 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-2">
+            <div class="flex items-center space-x-3">
+                <div class="bg-white/10 p-2.5 rounded-xl border border-white/20">
+                    <i class="fa-solid fa-book-open-reader text-emerald-300 text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg sm:text-xl font-bold tracking-tight">Madrasatul Qur'an</h1>
+                    <p class="text-xs text-emerald-200">Yayasan Pondok Pesantren Sunan Drajat • Tahun Ajaran 2026-2027</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3">
+                <span id="submissionCounterBadge" class="bg-emerald-700 border border-emerald-600 text-xs px-3 py-1.5 rounded-full font-medium shadow-inner flex items-center gap-1.5">
+                    <i class="fa-solid fa-file-lines text-emerald-300"></i> Total Laporan: <strong id="headerCount" class="text-white">0</strong>
+                </span>
+                <button onclick="switchTab('form')" id="navFormBtn" class="bg-white text-emerald-800 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-emerald-50 transition shadow-sm">
+                    <i class="fa-solid fa-pen-to-square mr-1.5"></i> Isi Laporan
+                </button>
+                <button onclick="switchTab('recap')" id="navRecapBtn" class="bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition border border-emerald-600">
+                    <i class="fa-solid fa-chart-pie mr-1.5"></i> Rekapan & Diagram
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-8">
+
+        <!-- Custom Notification Modal -->
+        <div id="customModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl transform transition-all">
+                <div class="flex items-center space-x-3 mb-4">
+                    <div id="modalIconBg" class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-bold">
+                        <i id="modalIcon" class="fa-solid fa-check text-lg"></i>
+                    </div>
+                    <h3 id="modalTitle" class="text-lg font-bold text-slate-900">Notifikasi</h3>
+                </div>
+                <p id="modalMessage" class="text-sm text-slate-600 mb-6 leading-relaxed">Pesan notifikasi...</p>
+                <div class="flex justify-end">
+                    <button onclick="closeModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition shadow-md shadow-emerald-600/20">
+                        Mengerti
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Custom Confirm Modal -->
+        <div id="confirmModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl transform transition-all">
+                <div class="flex items-center space-x-3 mb-4">
+                    <div class="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center text-rose-600 font-bold">
+                        <i class="fa-solid fa-triangle-exclamation text-lg"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-900">Konfirmasi Tindakan</h3>
+                </div>
+                <p id="confirmModalMessage" class="text-sm text-slate-600 mb-6 leading-relaxed">Apakah Anda yakin ingin melanjutkan tindakan ini?</p>
+                <div class="flex justify-end gap-3">
+                    <button onclick="closeConfirmModal()" class="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-semibold text-sm hover:bg-slate-100 transition">
+                        Batal
+                    </button>
+                    <button id="confirmModalActionBtn" class="bg-rose-600 hover:bg-rose-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition shadow-md">
+                        Ya, Lanjutkan
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 1: FORM PENGISIAN WALI KELAS -->
+        <section id="formView" class="space-y-6">
+            <div class="bg-gradient-to-r from-emerald-800 to-emerald-900 rounded-2xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
+                <div class="absolute right-0 top-0 translate-x-8 -translate-y-8 w-64 h-64 bg-white/5 rounded-full pointer-events-none"></div>
+                <div class="relative z-10 max-w-2xl">
+                    <span class="bg-emerald-700/80 text-emerald-200 text-xs font-semibold px-3 py-1 rounded-full border border-emerald-600 uppercase tracking-wider">Formulir Resmi 2026/2027</span>
+                    <h2 class="text-2xl sm:text-3xl font-extrabold mt-3 tracking-tight">Pelaporan Perkembangan Wali Kelas</h2>
+                    <p class="text-emerald-100 text-sm mt-2 leading-relaxed">Silakan lengkapi identitas kelas, perkembangan santri, nilai bacaan, akhlak, kehadiran, serta sarana prasarana dengan teliti.</p>
+                    <p class="text-xs text-emerald-300 mt-2 font-medium">By: mqyppsd@gmail.com</p>
+                </div>
+            </div>
+
+            <form id="waliKelasForm" onsubmit="handleFormSubmit(event)" class="space-y-6">
+                
+                <!-- Identitas Wali Kelas & Kelas -->
+                <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200">
+                    <h3 class="text-base font-bold text-slate-900 flex items-center gap-2 pb-4 border-b border-slate-100 mb-6">
+                        <span class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-sm font-bold">1</span>
+                        Identitas & Ruang Kelas
+                    </h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Tanggal (Real-time auto populated) -->
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">1. Tanggal Laporan (Real-time) <span class="text-red-500">*</span></label>
+                            <input type="date" id="tanggal" required readonly
+                                class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm bg-slate-100 text-slate-600 cursor-not-allowed">
+                        </div>
+
+                        <!-- Nama Ustadz -->
+                        <div class="space-y-1.5 md:col-span-2 lg:col-span-2">
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Nama Ustadz / Wali Kelas <span class="text-red-500">*</span></label>
+                            <input type="text" id="namaUstadz" required placeholder="Contoh: Ustadz Ahmad Fauzi, S.Pd.I" 
+                                class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-slate-50/50">
+                        </div>
+
+                        <!-- Tingkat -->
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Tingkat <span class="text-red-500">*</span></label>
+                            <select id="tingkat" required class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-slate-50/50">
+                                <option value="">-- Pilih Tingkat --</option>
+                                <option value="SLTP">SLTP</option>
+                                <option value="SLTA">SLTA</option>
+                                <option value="Mahasiswa">Mahasiswa</option>
+                            </select>
+                        </div>
+
+                        <!-- Kelas -->
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Kelas <span class="text-red-500">*</span></label>
+                            <select id="kelas" required class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-slate-50/50">
+                                <option value="">-- Pilih Kelas --</option>
+                                <option value="1">Kelas 1</option>
+                                <option value="2">Kelas 2</option>
+                                <option value="3">Kelas 3</option>
+                            </select>
+                        </div>
+
+                        <!-- Ruang -->
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Ruang <span class="text-red-500">*</span></label>
+                            <select id="ruang" required class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-slate-50/50">
+                                <option value="">-- Pilih Ruang --</option>
+                                <script>
+                                    for(let i=0; i<13; i++) {
+                                        let char = String.fromCharCode(65 + i);
+                                        document.write(`<option value="${char}">Ruang ${char}</option>`);
+                                    }
+                                </script>
+                            </select>
+                        </div>
+
+                        <!-- Bulan -->
+                        <div class="space-y-1.5 md:col-span-3 lg:col-span-1">
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Bulan Pelaporan <span class="text-red-500">*</span></label>
+                            <select id="bulan" required class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-slate-50/50">
+                                <option value="">-- Pilih Bulan --</option>
+                                <option value="Januari">Januari</option>
+                                <option value="Februari">Februari</option>
+                                <option value="Maret">Maret</option>
+                                <option value="April">April</option>
+                                <option value="Mei">Mei</option>
+                                <option value="Juni">Juni</option>
+                                <option value="Juli">Juli</option>
+                                <option value="Agustus">Agustus</option>
+                                <option value="September">September</option>
+                                <option value="Oktober">Oktober</option>
+                                <option value="November">November</option>
+                                <option value="Desember">Desember</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detail Perkembangan & Evaluasi Santri -->
+                <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200">
+                    <h3 class="text-base font-bold text-slate-900 flex items-center gap-2 pb-4 border-b border-slate-100 mb-6">
+                        <span class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-sm font-bold">2</span>
+                        Perkembangan Santri, Sarana, & Evaluasi
+                    </h3>
+
+                    <div class="space-y-6">
+                        <!-- Grid for Jumlah Santri & Nilai Bacaan -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Jumlah Santri -->
+                            <div class="space-y-1.5">
+                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">2. Jumlah Santri (Angka) <span class="text-red-500">*</span></label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                                        <i class="fa-solid fa-users"></i>
+                                    </span>
+                                    <input type="number" id="jumlahSantri" required min="1" max="150" placeholder="Contoh: 28" 
+                                        class="w-full rounded-xl border border-slate-300 pl-11 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-slate-50/50">
+                                </div>
+                            </div>
+
+                            <!-- Nilai Bacaan -->
+                            <div class="space-y-1.5">
+                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">3. Nilai Bacaan Santri Rata-rata <span class="text-red-500">*</span></label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                                        <i class="fa-solid fa-book-quran"></i>
+                                    </span>
+                                    <select id="nilaiBacaan" required class="w-full rounded-xl border border-slate-300 pl-11 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-slate-50/50">
+                                        <option value="">-- Pilih Nilai Bacaan --</option>
+                                        <option value="70">70 - Cukup / Standar</option>
+                                        <option value="75">75 - Cukup Baik</option>
+                                        <option value="80">80 - Baik / Lancar</option>
+                                        <option value="85">85 - Sangat Baik</option>
+                                        <option value="90">90 - Istimewa / Fasih</option>
+                                        <option value="95">95 - Mumtaz / Sempurna</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Grid for Akhlak & Kehadiran -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Akhlak -->
+                            <div class="space-y-1.5">
+                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">4. Akhlak Santri Rata-rata <span class="text-red-500">*</span></label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                                        <i class="fa-solid fa-heart-pulse"></i>
+                                    </span>
+                                    <select id="akhlak" required class="w-full rounded-xl border border-slate-300 pl-11 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-slate-50/50">
+                                        <option value="">-- Pilih Kondisi Akhlak --</option>
+                                        <option value="Kurang Baik">Kurang Baik</option>
+                                        <option value="Baik">Baik</option>
+                                        <option value="Sangat Baik">Sangat Baik</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Kehadiran (%) -->
+                            <div class="space-y-1.5">
+                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">5. Kehadiran (%) <span class="text-red-500">*</span></label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                                        <i class="fa-solid fa-percent"></i>
+                                    </span>
+                                    <input type="number" id="kehadiranPercent" required min="0" max="100" placeholder="Contoh: 98" 
+                                        class="w-full rounded-xl border border-slate-300 pl-11 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-slate-50/50">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Keterangan Kehadiran -->
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Keterangan Kehadiran <span class="text-red-500">*</span></label>
+                            <textarea id="keteranganKehadiran" rows="2" required placeholder="Contoh: 2 santri izin karena sakit, lainnya hadir aktif mengikuti KBM."
+                                class="w-full rounded-xl border border-slate-300 p-4 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-slate-50/50"></textarea>
+                        </div>
+
+                        <!-- Perkembangan Sarana Kelas -->
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">6. Perkembangan Sarana Kelas (Isian) <span class="text-red-500">*</span></label>
+                            <textarea id="perkembanganSarana" rows="2" required placeholder="Kondisi meja, kursi, papan tulis, kebersihan ruang kelas, serta fasilitas penunjang..."
+                                class="w-full rounded-xl border border-slate-300 p-4 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-slate-50/50"></textarea>
+                        </div>
+
+                        <!-- Pelaporan Kendala Santri / KBM -->
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">7. Pelaporan Kendala Santri / KBM (Isian) <span class="text-red-500">*</span></label>
+                            <textarea id="pelaporanKendala" rows="2" required placeholder="Kendala KBM, fasilitas rusak, atau masalah kedisiplinan yang memerlukan penanganan khusus..."
+                                class="w-full rounded-xl border border-slate-300 p-4 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-slate-50/50"></textarea>
+                        </div>
+
+                        <!-- Santri yang Perlu Diperhatikan (5 Kolom) -->
+                        <div class="mt-8 pt-6 border-t border-slate-100">
+                            <h4 class="text-sm font-bold text-slate-900 mb-1 flex items-center gap-2">
+                                <i class="fa-solid fa-triangle-exclamation text-amber-500"></i>
+                                8. Nama-Nama Santri yang Perlu Diperhatikan Serta Keterangannya (Tersedia 5 Kolom)
+                            </h4>
+                            <p class="text-xs text-slate-500 mb-4">Sediakan hingga 5 santri yang memerlukan perhatian khusus dalam hafalan, bacaan, atau akhlak.</p>
+                            
+                            <div class="space-y-3" id="santriPerhatianContainer">
+                                <!-- Row 1 -->
+                                <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                                    <div class="sm:col-span-4">
+                                        <input type="text" placeholder="1. Nama Santri" class="santri-nama w-full rounded-lg border border-slate-300 px-3 py-2 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                                    </div>
+                                    <div class="sm:col-span-8">
+                                        <input type="text" placeholder="Keterangan / Catatan Khusus (Contoh: Kurang lancar setoran surah Al-Baqarah)" class="santri-ket w-full rounded-lg border border-slate-300 px-3 py-2 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                                    </div>
+                                </div>
+                                <!-- Row 2 -->
+                                <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                                    <div class="sm:col-span-4">
+                                        <input type="text" placeholder="2. Nama Santri (Opsional)" class="santri-nama w-full rounded-lg border border-slate-300 px-3 py-2 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                                    </div>
+                                    <div class="sm:col-span-8">
+                                        <input type="text" placeholder="Keterangan / Catatan Khusus" class="santri-ket w-full rounded-lg border border-slate-300 px-3 py-2 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                                    </div>
+                                </div>
+                                <!-- Row 3 -->
+                                <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                                    <div class="sm:col-span-4">
+                                        <input type="text" placeholder="3. Nama Santri (Opsional)" class="santri-nama w-full rounded-lg border border-slate-300 px-3 py-2 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                                    </div>
+                                    <div class="sm:col-span-8">
+                                        <input type="text" placeholder="Keterangan / Catatan Khusus" class="santri-ket w-full rounded-lg border border-slate-300 px-3 py-2 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                                    </div>
+                                </div>
+                                <!-- Row 4 -->
+                                <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                                    <div class="sm:col-span-4">
+                                        <input type="text" placeholder="4. Nama Santri (Opsional)" class="santri-nama w-full rounded-lg border border-slate-300 px-3 py-2 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                                    </div>
+                                    <div class="sm:col-span-8">
+                                        <input type="text" placeholder="Keterangan / Catatan Khusus" class="santri-ket w-full rounded-lg border border-slate-300 px-3 py-2 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                                    </div>
+                                </div>
+                                <!-- Row 5 -->
+                                <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                                    <div class="sm:col-span-4">
+                                        <input type="text" placeholder="5. Nama Santri (Opsional)" class="santri-nama w-full rounded-lg border border-slate-300 px-3 py-2 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                                    </div>
+                                    <div class="sm:col-span-8">
+                                        <input type="text" placeholder="Keterangan / Catatan Khusus" class="santri-ket w-full rounded-lg border border-slate-300 px-3 py-2 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Saran untuk Pengurus Madrasah -->
+                        <div class="space-y-1.5 mt-6">
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">9. Saran untuk Pengurus Madrasah <span class="text-red-500">*</span></label>
+                            <textarea id="saranPengurus" rows="3" required placeholder="Masukan dan usulan konstruktif untuk peningkatan mutu pendidikan Madrasatul Qur'an..."
+                                class="w-full rounded-xl border border-slate-300 p-4 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-slate-50/50"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="flex items-center justify-end gap-4 pt-2">
+                    <button type="reset" class="px-6 py-3 rounded-xl border border-slate-300 text-slate-700 font-semibold text-sm hover:bg-slate-100 transition">
+                        Reset Form
+                    </button>
+                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 rounded-xl text-sm font-semibold transition shadow-lg shadow-emerald-600/20 flex items-center gap-2">
+                        <i class="fa-solid fa-paper-plane"></i> Kirim Laporan Wali Kelas
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <!-- VIEW 2: REKAPAN & DIAGRAM -->
+        <section id="recapView" class="space-y-6 hidden">
+            <!-- Stats Overview Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl font-bold">
+                        <i class="fa-solid fa-clipboard-list"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-slate-500 uppercase">Total Laporan Masuk</p>
+                        <h4 id="statTotal" class="text-2xl font-bold text-slate-900 mt-1">0</h4>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-xl font-bold">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-slate-500 uppercase">Total Santri Tercatat</p>
+                        <h4 id="statSantri" class="text-2xl font-bold text-slate-900 mt-1">0</h4>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-xl font-bold">
+                        <i class="fa-solid fa-book-quran"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-slate-500 uppercase">Rata-rata Nilai Bacaan</p>
+                        <h4 id="statNilai" class="text-2xl font-bold text-slate-900 mt-1">0</h4>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center text-xl font-bold">
+                        <i class="fa-solid fa-percent"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-slate-500 uppercase">Rata-rata Kehadiran</p>
+                        <h4 id="statKehadiran" class="text-2xl font-bold text-slate-900 mt-1">0%</h4>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Chart 1: Berdasarkan Tingkat -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-slate-900 text-base">Distribusi Laporan per Tingkat</h3>
+                        <span class="text-xs text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">Grafik Batang</span>
+                    </div>
+                    <div class="h-64 relative flex items-center justify-center">
+                        <canvas id="tingkatChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 2: Berdasarkan Kondisi Akhlak -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-slate-900 text-base">Distribusi Kondisi Akhlak Santri</h3>
+                        <span class="text-xs text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">Grafik Donat</span>
+                    </div>
+                    <div class="h-64 relative flex items-center justify-center">
+                        <canvas id="akhlakChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Table & Download Controls -->
+            <div id="printableArea" class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h3 class="font-bold text-slate-900 text-lg">Hasil Rekapan Data Laporan Wali Kelas</h3>
+                        <p class="text-xs text-slate-500 mt-0.5">Daftar lengkap seluruh laporan yang masuk ke sistem. (By: mqyppsd@gmail.com)</p>
+                    </div>
+                    <div class="flex items-center space-x-2 w-full sm:w-auto flex-wrap gap-2">
+                        <button onclick="downloadCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-xs font-semibold transition flex items-center gap-2 shadow-sm">
+                            <i class="fa-solid fa-file-excel"></i> Download (CSV)
+                        </button>
+                        <button onclick="downloadPDF()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-xs font-semibold transition flex items-center gap-2 shadow-sm">
+                            <i class="fa-solid fa-file-pdf"></i> Download (PDF)
+                        </button>
+                        <button onclick="confirmResetData()" class="bg-rose-50 hover:bg-rose-100 text-rose-700 px-3 py-2.5 rounded-xl text-xs font-semibold transition border border-rose-200">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-600 font-bold uppercase tracking-wider border-b border-slate-200">
+                                <th class="p-4">Tanggal</th>
+                                <th class="p-4">Wali Kelas</th>
+                                <th class="p-4">Kelas / Ruang</th>
+                                <th class="p-4">Bulan</th>
+                                <th class="p-4 text-center">Jml Santri</th>
+                                <th class="p-4 text-center">Nilai Bacaan</th>
+                                <th class="p-4 text-center">Akhlak</th>
+                                <th class="p-4 text-center">Kehadiran</th>
+                                <th class="p-4">Sarana & Kendala</th>
+                                <th class="p-4">Santri Perhatian (5 Kolom)</th>
+                                <th class="p-4">Saran</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recapTableBody" class="divide-y divide-slate-100 text-slate-700">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="emptyTableState" class="p-12 text-center text-slate-400 hidden">
+                    <i class="fa-solid fa-folder-open text-4xl mb-3 text-slate-300"></i>
+                    <p class="text-sm font-medium">Belum ada data laporan yang dikirimkan.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 mt-12">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-2">
+            <p>&copy; 2026-2027 Madrasatul Qur'an Yayasan Pondok Pesantren Sunan Drajat.</p>
+            <p class="font-medium text-emerald-700">Kontak Resmi: mqyppsd@gmail.com</p>
+        </div>
+    </footer>
+
+    <script>
+        // Default Mock Data or LocalStorage
+        let reportsData = JSON.parse(localStorage.getItem('mq_reports_2026_v4')) || [
+            {
+                id: 1,
+                tanggal: '2026-07-15',
+                namaUstadz: 'Ustadz H. M. Zainul Arifin, M.Pd.I',
+                tingkat: 'SLTP',
+                kelas: '1',
+                ruang: 'A',
+                bulan: 'Juli',
+                jumlahSantri: 28,
+                nilaiBacaan: 80,
+                akhlak: 'Sangat Baik',
+                kehadiranPercent: 98,
+                keteranganKehadiran: '2 santri izin sakit, lainnya hadir aktif.',
+                perkembanganSarana: 'Kondisi kursi dan meja baik.',
+                pelaporanKendala: 'Penerangan lampu sudut kelas kadang kurang stabil.',
+                santriPerhatian: [
+                    { nama: 'Ahmad Zaki', ket: 'Kurang lancar setoran juz 2' },
+                    { nama: 'M. Farhan', ket: 'Sering izin terlambat' }
+                ],
+                saranPengurus: 'Mohon pengecekan instalasi listrik secara berkala.'
+            }
+        ];
+
+        let tingkatChartInstance = null;
+        let akhlakChartInstance = null;
+
+        // Switch between 'form' and 'recap' tabs
+        function switchTab(tabName) {
+            const formView = document.getElementById('formView');
+            const recapView = document.getElementById('recapView');
+            const navFormBtn = document.getElementById('navFormBtn');
+            const navRecapBtn = document.getElementById('navRecapBtn');
+
+            if(tabName === 'form') {
+                formView.classList.remove('hidden');
+                recapView.classList.add('hidden');
+                navFormBtn.className = 'bg-white text-emerald-800 px-4 py-2 rounded-lg text-sm font-semibold transition shadow-sm';
+                navRecapBtn.className = 'bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition border border-emerald-600 hover:bg-emerald-600';
+            } else {
+                formView.classList.add('hidden');
+                recapView.classList.remove('hidden');
+                navRecapBtn.className = 'bg-white text-emerald-800 px-4 py-2 rounded-lg text-sm font-semibold transition shadow-sm';
+                navFormBtn.className = 'bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition border border-emerald-600 hover:bg-emerald-600';
+                renderRecapData();
+            }
+        }
+
+        // Custom Notification Modal
+        function showModal(title, message, isSuccess = true) {
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalMessage').innerText = message;
+            const iconBg = document.getElementById('modalIconBg');
+            const icon = document.getElementById('modalIcon');
+            if(isSuccess) {
+                iconBg.className = 'w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-bold';
+                icon.className = 'fa-solid fa-check text-lg';
+            } else {
+                iconBg.className = 'w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center text-rose-600 font-bold';
+                icon.className = 'fa-solid fa-triangle-exclamation text-lg';
+            }
+            document.getElementById('customModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('customModal').classList.add('hidden');
+        }
+
+        // Custom Confirm Modal
+        function confirmResetData() {
+            document.getElementById('confirmModalMessage').innerText = "Apakah Anda yakin ingin menghapus seluruh data rekapan laporan? Tindakan ini tidak dapat dibatalkan.";
+            document.getElementById('confirmModalActionBtn').onclick = function() {
+                reportsData = [];
+                localStorage.removeItem('mq_reports_2026_v4');
+                renderRecapData();
+                closeConfirmModal();
+                showModal('Berhasil', 'Seluruh data rekapan telah dibersihkan.', true);
+            };
+            document.getElementById('confirmModal').classList.remove('hidden');
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').classList.add('hidden');
+        }
+
+        // Handle Form Submission
+        function handleFormSubmit(e) {
+            e.preventDefault();
+
+            // Collect 5 santri perhatian rows
+            let santriPerhatianList = [];
+            const namaInputs = document.querySelectorAll('.santri-nama');
+            const ketInputs = document.querySelectorAll('.santri-ket');
+            
+            for(let i=0; i<namaInputs.length; i++) {
+                let nVal = namaInputs[i].value.trim();
+                let kVal = ketInputs[i].value.trim();
+                if(nVal !== '') {
+                    santriPerhatianList.push({ nama: nVal, ket: kVal });
+                }
+            }
+
+            const newReport = {
+                id: Date.now(),
+                tanggal: document.getElementById('tanggal').value,
+                namaUstadz: document.getElementById('namaUstadz').value.trim(),
+                tingkat: document.getElementById('tingkat').value,
+                kelas: document.getElementById('kelas').value,
+                ruang: document.getElementById('ruang').value,
+                bulan: document.getElementById('bulan').value,
+                jumlahSantri: parseInt(document.getElementById('jumlahSantri').value) || 0,
+                nilaiBacaan: parseInt(document.getElementById('nilaiBacaan').value) || 0,
+                akhlak: document.getElementById('akhlak').value,
+                kehadiranPercent: parseInt(document.getElementById('kehadiranPercent').value) || 0,
+                keteranganKehadiran: document.getElementById('keteranganKehadiran').value.trim(),
+                perkembanganSarana: document.getElementById('perkembanganSarana').value.trim(),
+                pelaporanKendala: document.getElementById('pelaporanKendala').value.trim(),
+                santriPerhatian: santriPerhatianList,
+                saranPengurus: document.getElementById('saranPengurus').value.trim()
+            };
+
+            reportsData.unshift(newReport);
+            localStorage.setItem('mq_reports_2026_v4', JSON.stringify(reportsData));
+            updateHeaderCounter();
+
+            document.getElementById('waliKelasForm').reset();
+            document.getElementById('tanggal').value = new Date().toISOString().split('T')[0];
+
+            showModal('Berhasil!', 'Laporan Wali Kelas berhasil dikirim dan tersimpan dalam rekapan sistem.', true);
+        }
+
+        // Update Counter in Header
+        function updateHeaderCounter() {
+            document.getElementById('headerCount').innerText = reportsData.length;
+        }
+
+        // Render Recap Data & Charts
+        function renderRecapData() {
+            updateHeaderCounter();
+            document.getElementById('statTotal').innerText = reportsData.length;
+
+            if(reportsData.length === 0) {
+                document.getElementById('statSantri').innerText = '0';
+                document.getElementById('statNilai').innerText = '0';
+                document.getElementById('statKehadiran').innerText = '0%';
+                document.getElementById('recapTableBody').innerHTML = '';
+                document.getElementById('emptyTableState').classList.remove('hidden');
+                return;
+            }
+
+            document.getElementById('emptyTableState').classList.add('hidden');
+
+            // Compute Stats
+            let totalSantriSum = 0;
+            let totalNilaiSum = 0;
+            let totalKehadiranSum = 0;
+            let tingkatCounts = {};
+            let akhlakCounts = {};
+
+            reportsData.forEach(r => {
+                totalSantriSum += r.jumlahSantri;
+                totalNilaiSum += r.nilaiBacaan;
+                totalKehadiranSum += r.kehadiranPercent;
+                
+                tingkatCounts[r.tingkat] = (tingkatCounts[r.tingkat] || 0) + 1;
+                akhlakCounts[r.akhlak] = (akhlakCounts[r.akhlak] || 0) + 1;
+            });
+
+            let avgNilai = Math.round(totalNilaiSum / reportsData.length);
+            let avgKehadiran = Math.round(totalKehadiranSum / reportsData.length);
+
+            document.getElementById('statSantri').innerText = totalSantriSum;
+            document.getElementById('statNilai').innerText = avgNilai;
+            document.getElementById('statKehadiran').innerText = avgKehadiran + '%';
+
+            // Render Table Rows
+            let tbodyHtml = '';
+            reportsData.forEach(r => {
+                let akhlakBadge = 'bg-slate-100 text-slate-800';
+                if(r.akhlak === 'Sangat Baik') akhlakBadge = 'bg-emerald-100 text-emerald-800';
+                else if(r.akhlak === 'Baik') akhlakBadge = 'bg-blue-100 text-blue-800';
+                else if(r.akhlak === 'Kurang Baik') akhlakBadge = 'bg-rose-100 text-rose-800';
+
+                let santriHtml = '<ul class="list-disc pl-4 space-y-1">';
+                if(r.santriPerhatian && r.santriPerhatian.length > 0) {
+                    r.santriPerhatian.forEach(sp => {
+                        santriHtml += `<li><strong>${escapeHtml(sp.nama)}</strong>: ${escapeHtml(sp.ket)}</li>`;
+                    });
+                } else {
+                    santriHtml += '<span class="text-slate-400 italic">Tidak ada catatan</span>';
+                }
+                santriHtml += '</ul>';
+
+                tbodyHtml += `
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="p-4 font-medium text-slate-900 whitespace-nowrap">${r.tanggal}</td>
+                        <td class="p-4 font-semibold text-emerald-800">${escapeHtml(r.namaUstadz)}</td>
+                        <td class="p-4 whitespace-nowrap"><span class="bg-emerald-100 text-emerald-800 font-semibold px-2 py-0.5 rounded text-[11px]">${r.tingkat} - Kls ${r.kelas} - R${r.ruang} (${r.bulan})</span></td>
+                        <td class="p-4 font-medium">${r.bulan}</td>
+                        <td class="p-4 text-center font-bold text-slate-800">${r.jumlahSantri} anak</td>
+                        <td class="p-4 text-center"><span class="bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded text-[11px]">${r.nilaiBacaan}</span></td>
+                        <td class="p-4 text-center"><span class="${akhlakBadge} font-semibold px-2.5 py-1 rounded-md text-[11px]">${r.akhlak}</span></td>
+                        <td class="p-4 text-center font-semibold text-blue-700">${r.kehadiranPercent}%</td>
+                        <td class="p-4 max-w-xs">
+                            <p class="text-xs font-semibold text-slate-700">Sarana: ${escapeHtml(r.perkembanganSarana)}</p>
+                            <p class="text-xs text-rose-600 mt-1">Kendala: ${escapeHtml(r.pelaporanKendala)}</p>
+                        </td>
+                        <td class="p-4 min-w-[200px]">${santriHtml}</td>
+                        <td class="p-4 max-w-xs" title="${escapeHtml(r.saranPengurus)}">${escapeHtml(r.saranPengurus)}</td>
+                    </tr>
+                `;
+            });
+            document.getElementById('recapTableBody').innerHTML = tbodyHtml;
+
+            // Render Charts
+            renderCharts(tingkatCounts, akhlakCounts);
+        }
+
+        function renderCharts(tingkatCounts, akhlakCounts) {
+            const ctxTingkat = document.getElementById('tingkatChart').getContext('2d');
+            if(tingkatChartInstance) tingkatChartInstance.destroy();
+
+            tingkatChartInstance = new Chart(ctxTingkat, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(tingkatCounts),
+                    datasets: [{
+                        label: 'Jumlah Laporan',
+                        data: Object.values(tingkatCounts),
+                        backgroundColor: '#059669',
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { precision: 0 } }
+                    }
+                }
+            });
+
+            const ctxAkhlak = document.getElementById('akhlakChart').getContext('2d');
+            if(akhlakChartInstance) akhlakChartInstance.destroy();
+
+            akhlakChartInstance = new Chart(ctxAkhlak, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(akhlakCounts),
+                    datasets: [{
+                        data: Object.values(akhlakCounts),
+                        backgroundColor: ['#059669', '#3b82f6', '#f43f5e']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } }
+                }
+            });
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        // Download CSV function
+        function downloadCSV() {
+            if(reportsData.length === 0) {
+                showModal('Perhatian', 'Belum ada data untuk di-download.', false);
+                return;
+            }
+
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "ID,Tanggal,Nama Ustadz,Tingkat,Kelas,Ruang,Bulan,Jumlah Santri,Nilai Bacaan,Akhlak,Kehadiran (%),Sarana Kelas,Kendala KBM,Santri Perhatian,Saran Pengurus\r\n";
+
+            reportsData.forEach(r => {
+                let santriStr = r.santriPerhatian ? r.santriPerhatian.map(sp => `${sp.nama} (${sp.ket})`).join("; ") : "";
+                let row = [
+                    r.id,
+                    `"${r.tanggal}"`,
+                    `"${r.namaUstadz}"`,
+                    `"${r.tingkat}"`,
+                    `"${r.kelas}"`,
+                    `"${r.ruang}"`,
+                    `"${r.bulan}"`,
+                    r.jumlahSantri,
+                    r.nilaiBacaan,
+                    `"${r.akhlak}"`,
+                    r.kehadiranPercent,
+                    `"${r.perkembanganSarana.replace(/"/g, '""')}"`,
+                    `"${r.pelaporanKendala.replace(/"/g, '""')}"`,
+                    `"${santriStr.replace(/"/g, '""')}"`,
+                    `"${r.saranPengurus.replace(/"/g, '""')}"`
+                ];
+                csvContent += row.join(",") + "\r\n";
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `Rekapan_Pelaporan_Wali_Kelas_MQ_2026.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Download PDF function
+        function downloadPDF() {
+            if(reportsData.length === 0) {
+                showModal('Perhatian', 'Belum ada data untuk di-export ke PDF.', false);
+                return;
+            }
+            const element = document.getElementById('printableArea');
+            const opt = {
+                margin:       10,
+                filename:     'Rekapan_Pelaporan_Wali_Kelas_MQ_2026.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            };
+            html2pdf().from(element).set(opt).save();
+        }
+
+        window.onload = function() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('tanggal').value = today;
+            updateHeaderCounter();
+        };
+    </script>
+</body>
+</html>
